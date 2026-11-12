@@ -17,7 +17,6 @@ import net from 'node:net'
 import tls from 'node:tls'
 import zlib from 'node:zlib'
 import dns from 'node:dns/promises'
-import { Readable } from 'node:stream'
 
 const CONNECT_TIMEOUT_MS = 30_000
 const MAX_HEAD_BYTES = 64 * 1024
@@ -477,6 +476,38 @@ function defineMeta(response, url, redirected) {
   return response
 }
 
+/** Bridge a Node readable into a web stream eagerly (data buffered, no lazy pull). */
+function toWebStream(readable) {
+  return new ReadableStream({
+    start(controller) {
+      readable.on('data', (chunk) => {
+        try {
+          controller.enqueue(new Uint8Array(chunk))
+        } catch {
+          // The consumer cancelled; cancellation destroys the readable.
+        }
+      })
+      readable.on('end', () => {
+        try {
+          controller.close()
+        } catch {
+          // Already closed.
+        }
+      })
+      readable.on('error', (error) => {
+        try {
+          controller.error(error)
+        } catch {
+          // Already closed.
+        }
+      })
+    },
+    cancel(reason) {
+      if (!readable.destroyed) readable.destroy(reason instanceof Error ? reason : undefined)
+    },
+  })
+}
+
 /** Turn one Node response into a real WHATWG Response, decoding content-encoding. */
 function buildResponse(incoming, socket, signal, url) {
   const status = incoming.statusCode ?? 502
@@ -509,27 +540,7 @@ function buildResponse(incoming, socket, signal, url) {
 
   const noBody = status === 204 || status === 205 || status === 304
   if (noBody) incoming.resume()
-  if (process.env.DSH_PROVIDER_TRANSPORT_DEBUG === '1') {
-    const state = () => ({
-      destroyed: incoming.destroyed,
-      flowing: incoming.readableFlowing,
-      length: incoming.readableLength,
-      ended: incoming.readableEnded,
-      socketDestroyed: socket.destroyed,
-    })
-    debugLog('body start', state())
-    incoming.on('end', () => debugLog('body end', state()))
-    incoming.on('close', () => debugLog('body close', state()))
-    const timer = setInterval(() => debugLog('body state', state()), 1000)
-    const stop = () => clearInterval(timer)
-    incoming.on('end', stop)
-    incoming.on('close', stop)
-    incoming.on('error', (error) => {
-      stop()
-      debugLog('body error', error?.message)
-    })
-  }
-  const body = noBody || incoming.destroyed ? null : Readable.toWeb(stream)
+  const body = noBody || incoming.destroyed ? null : toWebStream(stream)
   const response = new Response(body, {
     status,
     statusText: incoming.statusMessage ?? '',
