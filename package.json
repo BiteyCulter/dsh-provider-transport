@@ -15,7 +15,6 @@
     "transport.js",
     "cordis.patch.yml",
     "README.md",
-    "README.zh-CN.md",
     "LICENSE"
   ],
   "scripts": {
@@ -27,6 +26,7 @@
   },
   "keywords": [
     "dsh",
+    "dsh-plugin",
     "deepseek-harness",
     "deepseek",
     "plugin",
