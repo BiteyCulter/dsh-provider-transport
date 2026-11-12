@@ -138,6 +138,7 @@ Desktop 版把 `web` 换成 `desktop`。必须重启 DSH：宿主插件和浏览
 | 编辑器里没有这一段 | 客户端 bundle 未加载：重启 DSH 并强制刷新。然后在 Console 查看 `window.__dshProviderTransport`：`anchors = 0` 表示 Provider 卡片座位未渲染；`anchors > 0, cards = 0` 表示编辑卡未被识别（对照 `sample` 看 DOM）。`cards` 只在编辑卡打开时大于 0。 |
 | 「provider-transport 设置命名空间不可用」 | 宿主插件未加载：确认 profile bundles 含 `dsh-provider-transport`，重启 DSH。 |
 | 模型请求报 `Connection error.` / `TRANSPORT` 并重试 | 请求已被接管，但配置的代理不可达（测试死端口时属于预期）。宿主日志中有 `provider-transport:` 前缀的记录，包含 provider、model、打码后的代理地址、请求 URL 与原因。 |
+| 需要更详细的传输日志 | 用 `DSH_PROVIDER_TRANSPORT_DEBUG=1` 启动 DSH，宿主日志会记录每一步（目标、代理分支、TLS 握手、响应）。 |
 | 上游看不到自定义请求头 | 确认该 Provider 走 pi-ai 适配器或一方 DeepSeek 适配器；保留头不能被覆盖。 |
 
 ## 测试

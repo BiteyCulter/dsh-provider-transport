@@ -48,6 +48,11 @@ const SOCKS_ERRORS = {
   8: '代理不支持该地址类型',
 }
 
+function debugLog(...args) {
+  if (process.env.DSH_PROVIDER_TRANSPORT_DEBUG !== '1') return
+  console.error('[provider-transport]', ...args)
+}
+
 function abortError() {
   return new DOMException('This operation was aborted', 'AbortError')
 }
@@ -234,6 +239,7 @@ function connectTcp(host, port, signal) {
 }
 
 function startTls(socket, hostname, signal, tlsOptions) {
+  debugLog('tls connect', hostname)
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
       socket.destroy()
@@ -247,6 +253,7 @@ function startTls(socket, hostname, signal, tlsOptions) {
       else options.servername = hostname
     }
     const secure = tls.connect(options)
+    debugLog('tls socket created')
     let settled = false
     const cleanup = () => {
       signal?.removeEventListener('abort', onAbort)
@@ -271,7 +278,8 @@ function startTls(socket, hostname, signal, tlsOptions) {
     const onError = (error) => finish(error)
     signal?.addEventListener('abort', onAbort, { once: true })
     secure.once('error', onError)
-    secure.once('secureConnect', () => finish())
+    secure.once('secureConnect', () => { debugLog('tls secureConnect'); finish() })
+    secure.once('error', (error) => debugLog('tls error', error?.message))
   })
 }
 
@@ -283,6 +291,7 @@ async function httpConnect(socket, target, authorization) {
     if (authorization) lines.push(`Proxy-Authorization: ${authorization}`)
     socket.write(`${lines.join('\r\n')}\r\n\r\n`)
     const head = (await reader.readHead()).toString('latin1')
+    debugLog('CONNECT reply', head.split('\r\n')[0] ?? '')
     const statusLine = head.split('\r\n', 1)[0] ?? ''
     const match = /^HTTP\/\d\.\d (\d{3})/.exec(statusLine)
     if (match === null) throw new Error(`代理 CONNECT 响应无效：${statusLine || '空响应'}`)
@@ -378,6 +387,7 @@ function deadlineError(label) {
  * HTTP(S) forward proxy return the proxy socket plus `absoluteForm: true`.
  */
 async function openTarget(target, proxy, signal, tlsOptions) {
+  debugLog('open target', `${target.hostname}:${target.port}`, 'secure', target.secure, 'proxy', proxy === undefined ? 'none' : `${proxy.protocol}//${proxy.hostname}:${proxy.port}`)
   if (proxy === undefined) {
     const raw = await connectTcp(target.hostname, target.port, signal)
     const timer = setTimeout(() => raw.destroy(deadlineError(`连接 ${target.hostname}:${target.port}`)), CONNECT_TIMEOUT_MS)
@@ -554,7 +564,9 @@ function sendOverSocket({ socket, method, path, headers, body, signal }) {
     }
     signal?.addEventListener('abort', onAbort, { once: true })
     request.once('error', onError)
+    debugLog('request created', method, path.slice(0, 80))
     request.once('response', (incoming) => {
+      debugLog('response', incoming.statusCode)
       if (settled) {
         incoming.resume()
         return

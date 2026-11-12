@@ -141,6 +141,7 @@ A header whose template references a value that is absent for that request is **
 | The section is missing from the editor | DSH has not loaded the client bundle yet: restart DSH and hard-refresh. Then check `window.__dshProviderTransport`: `anchors = 0` means the provider card seat did not render; `anchors > 0, cards = 0` means the editor card was not recognized (compare `sample` with the DOM). `cards` is only non-zero while an editor card is open. |
 | "provider-transport settings namespace unavailable" | The host plugin did not load. Check the profile bundles contain `dsh-provider-transport`, then restart DSH. |
 | Model calls fail with `Connection error.` / `TRANSPORT` and retries | The request was intercepted but the configured proxy is unreachable. This is expected for a dead proxy. The host log has a `provider-transport:` line with provider, model, proxy (credentials masked), request URL and cause. |
+| Need verbose transport logs | Start DSH with `DSH_PROVIDER_TRANSPORT_DEBUG=1` to log every transport stage (target, proxy branch, TLS handshake, response) to the host log. |
 | Headers do not show up upstream | Verify the provider uses the pi-ai adapter (`llm-pi-ai/request-headers` path) or one of the first-party DeepSeek adapters; custom headers cannot override reserved headers. |
 
 ## Tests
