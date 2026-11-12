@@ -1,0 +1,60 @@
+{
+  "name": "dsh-provider-transport",
+  "version": "0.2.0",
+  "description": "Per-provider HTTP/HTTPS/SOCKS proxy and custom request headers for DeepSeek Harness native providers",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "core.js",
+    "transport.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "check": "node --check index.js && node --check client.js && node --check core.js && node --check transport.js",
+    "test": "node --test tests/core.test.mjs tests/transport.test.mjs tests/client.test.mjs",
+    "test:bridge": "node tests/dom-bridge.test.mjs",
+    "test:tls": "node tests/make-cert.mjs && node --test tests/tls.test.mjs",
+    "test:smoke": "node tests/smoke.test.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "deepseek",
+    "plugin",
+    "proxy",
+    "socks5",
+    "http-proxy",
+    "request-headers",
+    "llm"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/schemastery": ">=3.18.4"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-settings-models",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
+    }
+  },
+  "license": "MIT"
+}
