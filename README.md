@@ -4,7 +4,7 @@
 [![node](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org)
 [![DSH](https://img.shields.io/badge/DSH-0.2.2--rc.1-blueviolet.svg)](https://github.com/deepseek-ai/deepseek-harness)
 
-> **声明 / Notice**
+> **声明 / Notice**<br>
 > 本项目由 AI 构建，不喜勿用。<br>
 > This project was built by AI. If that's not your thing, please don't use it.
 
