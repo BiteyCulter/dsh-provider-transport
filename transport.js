@@ -509,6 +509,26 @@ function buildResponse(incoming, socket, signal, url) {
 
   const noBody = status === 204 || status === 205 || status === 304
   if (noBody) incoming.resume()
+  if (process.env.DSH_PROVIDER_TRANSPORT_DEBUG === '1') {
+    const state = () => ({
+      destroyed: incoming.destroyed,
+      flowing: incoming.readableFlowing,
+      length: incoming.readableLength,
+      ended: incoming.readableEnded,
+      socketDestroyed: socket.destroyed,
+    })
+    debugLog('body start', state())
+    incoming.on('end', () => debugLog('body end', state()))
+    incoming.on('close', () => debugLog('body close', state()))
+    const timer = setInterval(() => debugLog('body state', state()), 1000)
+    const stop = () => clearInterval(timer)
+    incoming.on('end', stop)
+    incoming.on('close', stop)
+    incoming.on('error', (error) => {
+      stop()
+      debugLog('body error', error?.message)
+    })
+  }
   const body = noBody || incoming.destroyed ? null : Readable.toWeb(stream)
   const response = new Response(body, {
     status,

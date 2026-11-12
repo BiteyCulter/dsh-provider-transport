@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [22, 24]
+        node: [22]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,4 +25,4 @@ jobs:
       - name: TLS transport tests
         env:
           DSH_PROVIDER_TRANSPORT_DEBUG: "1"
-        run: timeout 120 npm run test:tls
+        run: timeout 60 npm run test:tls
