@@ -41,7 +41,7 @@ Unofficial community plugin, not affiliated with or endorsed by DeepSeek.
 ## 安装 Install
 
 ```bash
-git clone https://github.com/cmradix/dsh-provider-transport.git
+git clone https://github.com/BiteyCulter/dsh-provider-transport.git
 cd dsh-provider-transport
 
 # 链接进 profile，然后重启 DSH
