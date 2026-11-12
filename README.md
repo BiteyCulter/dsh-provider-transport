@@ -85,6 +85,30 @@ No `npm install` needed: the plugin has no runtime dependencies, and a linked pl
 
 Headers managed by DSH or the HTTP layer (`Authorization`, `Proxy-Authorization`, `Host`, `Content-Length`, `User-Agent`, `Connection`, `Transfer-Encoding`, …) cannot be overridden; names, values, and macros are validated before saving.
 
+## 本地调试：请求头真的发出去没 / Debug locally: are the headers really sent?
+
+仓库里带了一个不依赖 DSH 的请求探针，用来确认请求头确实落到了上游请求上。
+
+The repo ships a standalone request probe that shows whether your headers really reach the upstream request.
+
+```bash
+npm run probe                 # 假上游 127.0.0.1:18080 + 正向代理 127.0.0.1:18081
+node tools/header-probe.mjs --port 18080 --proxy-port 18081   # 自定义端口 / custom ports
+```
+
+1. 打开 `http://127.0.0.1:18080/` 看实时面板；终端也会逐条打印方法、URL 和收到的全部请求头。
+   Open `http://127.0.0.1:18080/` for the live dashboard; the terminal also prints method, URL, and every received header.
+2. 设置 → 模型 → 新建自定义 Provider：baseURL 填 `http://127.0.0.1:18080/v1`（OpenAI 兼容）或 `http://127.0.0.1:18080`（Anthropic Messages），模型随便填一个。
+   Settings → Models → create a custom provider: set baseURL to `http://127.0.0.1:18080/v1` (OpenAI-compatible) or `http://127.0.0.1:18080` (Anthropic Messages), and add any model id.
+3. 在该 Provider 的**网络代理与请求头**里加一个测试头，比如 `x-dsh-probe: ${provider}/${model}`，保存，然后发一条消息。
+   Add a test header such as `x-dsh-probe: ${provider}/${model}` under **Proxy & Request Headers** for that provider, save, and send a message.
+4. 想同时验证代理，把 Proxy 设成 `http://127.0.0.1:18081` 再发一次：forward-proxy 会记录绝对 URL 与请求头，然后转发到假上游。
+   To verify the proxy path too, set Proxy to `http://127.0.0.1:18081` and send again: the forward proxy records the absolute URL and headers, then forwards to the fake upstream.
+
+探针会把捕获结果追加到 `probe-capture.jsonl`（已加入 `.gitignore`），并返回最小 SSE 响应，让 DSH 能正常结束这次调用。它只监听 127.0.0.1，不接触真实 Provider。
+
+The probe appends captures to `probe-capture.jsonl` (git-ignored) and answers with a minimal SSE stream so DSH can finish the call. It only listens on 127.0.0.1 and never touches a real provider.
+
 ## 工作原理 / How it works
 
 插件只通过 DSH 的扩展点挂接，未改动 DSH 源码。

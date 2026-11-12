@@ -22,7 +22,8 @@
     "test": "node --test tests/core.test.mjs tests/transport.test.mjs tests/client.test.mjs",
     "test:bridge": "node tests/dom-bridge.test.mjs",
     "test:tls": "node tests/make-cert.mjs && node --test tests/tls.test.mjs",
-    "test:smoke": "node tests/smoke.test.mjs"
+    "test:smoke": "node tests/smoke.test.mjs",
+    "probe": "node tools/header-probe.mjs"
   },
   "keywords": [
     "dsh",
